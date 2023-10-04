@@ -13,3 +13,10 @@ router.get('/current', current);
 
 
 module.exports = router;
+
+
+
+
+// npx prisma init --datasource-provider sqlite - (добавление prisma с базой даднных sqlite в проект)
+// npx prisma migrate dev --name init - (создание базы данных)
+// npx prisma studio - (студия для просмотра базы данных)
