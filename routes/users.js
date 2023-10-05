@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {login, register,current} = require('../controllers/users')
+const {login, register, current} = require('../controllers/users');
 
 /* /api/user/login */
 router.post('/login', login);
@@ -11,11 +11,7 @@ router.post('/register', register);
 /* /api/user/current */
 router.get('/current', current);
 
-
 module.exports = router;
-
-
-
 
 // npx prisma init --datasource-provider sqlite - (добавление prisma с базой даднных sqlite в проект)
 // npx prisma migrate dev --name init - (создание базы данных)
