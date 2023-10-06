@@ -8,34 +8,36 @@ const jwt = require('jsonwebtoken');
  * @access Public
 */
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
+	try {
+		const { email, password } = req.body;
 
-	const { email, password } = req.body;
-
-	if (!email || !password) {
-		return res.status(400).json({ message: 'Пожалуйста, заполните обязятельные поля' })
-	}
-
-	const user = await prisma.user.findFirst({
-		where: {
-			email,
+		if (!email || !password) {
+			return res.status(400).json({ message: 'Пожалуйста, заполните обязятельные поля' })
 		}
-	});
 
-	const isPasswordCorrect = user && (await bcrypt.compare(password, user.password));
-	const secret = process.env.JWT_SECRET;
+		const user = await prisma.user.findFirst({
+			where: {
+				email,
+			}
+		});
 
-	if (user && isPasswordCorrect && secret) {
-		res.status(200).json({
-			id: user.id,
-			email: user.email,
-			name: user.name,
-			token: jwt.sign({ id: user.id }, secret, { expiresIn: '30d' })
-		})
-	} else {
-		return res.status(400).json({ message: 'Неверно введен логин или пароль' })
+		const isPasswordCorrect = user && (await bcrypt.compare(password, user.password));
+		const secret = process.env.JWT_SECRET;
+
+		if (user && isPasswordCorrect && secret) {
+			res.status(200).json({
+				id: user.id,
+				email: user.email,
+				name: user.name,
+				token: jwt.sign({ id: user.id }, secret, { expiresIn: '30d' })
+			})
+		} else {
+			return res.status(400).json({ message: 'Неверно введен логин или пароль' })
+		}
+	} catch {
+		res.status(500).json({ message: 'Что-то пошло не так' })
 	}
-
 }
 
 /**
@@ -44,48 +46,59 @@ const login = async (req, res) => {
  * @desc Регистрация
  * @access Public
  */
-const register = async (req, res) => {
-	
-	const { email, password, name } = req.body;
 
-	if(!email || !password || !name) {
-		return res.status(400).json({ message: 'Пожалуйста, заполните обязательные поля' })
-	}
+//1 получаем данные с клиентской части (email, password, name, ...)
+//2 если пришли все данные true || возвращаем ошибку
+//3 ищем пользователя в базе данных по email если его нет возвращаем ошибку
+//4 шифруем пароль 
+//5 создаем пользователя в базе данных
+//6 если пользователь создан & jwt secret присутстует отправляем пользователя и прокидываем ему token
 
-	const registeredUser = await prisma.user.findFirst({
-		where: {
-			email
+const register = async (req, res, next) => {
+	try {
+
+		const { email, password, name } = req.body;
+
+		if(!email || !password || !name) {
+			return res.status(400).json({ message: 'Пожалуйста, заполните обязательные поля' })
 		}
-	});
 
-	if (registeredUser) {
-		return res.status(400).json({ message: 'Пользователь, с таким email уже существует' })
-	}
+		const registeredUser = await prisma.user.findFirst({
+			where: {
+				email
+			}
+		});
 
-	const salt = await bcrypt.genSalt(10);
-	const hashedPassord = await bcrypt.hash(password, salt);
-
-	const user = await prisma.user.create({
-		data: {
-			email,
-			name,
-			password: hashedPassord
+		if (registeredUser) {
+			return res.status(400).json({ message: 'Пользователь, с таким email уже существует' })
 		}
-	});
 
-	const secret = process.env.JWT_SECRET;
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
 
-	if (user && secret) {
-		res.status(201).json({
-			id: user.id,
-			email: user.email,
-			name,
-			token: jwt.sign({ id: user.id }, secret, { expiresIn: '30d' })
-		})
-	} else {
-		return res.status(400).json({ message: 'Не удалось создать пользователя' })
+		const user = await prisma.user.create({
+			data: {
+				email,
+				name,
+				password: hashedPassword
+			}
+		});
+
+		const secret = process.env.JWT_SECRET;
+
+		if (user && secret) {
+			res.status(201).json({
+				id: user.id,
+				email: user.email,
+				name,
+				token: jwt.sign({ id: user.id }, secret, { expiresIn: '30d' })
+			})
+		} else {
+			return res.status(400).json({ message: 'Не удалось создать пользователя' })
+		}
+	} catch {
+		res.status(500).json({message: "Что-то пошло не так"})
 	}
-	
 }
 
 /**
@@ -95,8 +108,9 @@ const register = async (req, res) => {
  * @access Private
  */
 
-const current = (req, res) => {
-	res.send('login')
+// отправка данных текущего авторизованного пользователя 
+const current = async (req, res, next) => {
+	return res.status(200).json(req.user)
 }
 
 
