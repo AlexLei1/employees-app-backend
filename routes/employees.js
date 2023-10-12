@@ -13,10 +13,10 @@ router.get('/:id', auth, employee);
 /* /api/employees/add */
 router.post('/add', auth, add);
 
-/* /api/remove/:id */
+/* /api/employees/remove/:id */
 router.post('/remove/:id', auth, remove);
 
-/* /api/remove/edit/:id */
+/* /api/employees/remove/edit/:id */
 router.put('/edit/:id', auth, edit);
 
 module.exports = router;
