@@ -19,7 +19,7 @@ const auth = async (req, res, next) => {
 		// мутируем ответ от пользователя, добавляем пользователя из базы данных
 		req.user = user;
 
-		next();
+    	next();
   	} catch (error) {
     	res.status(401).json({ message: 'Не авторизован' });
   	}
